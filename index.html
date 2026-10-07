@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="DocuCraft Pro" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <title>DocuCraft Pro — Mobile PDF & AI App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=99" />
+  <!-- Core PDF, Document Conversion & Google OAuth 2.0 Gemini Engines -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <script>window.APP_BUILD = 99;</script>
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="update-banner" id="updateBanner" style="display:none;">
+    <span class="ub-icon">&#11014;</span>
+    <div class="ub-text"><strong>A new version is ready</strong><span>Update in 30 seconds — your documents and work are kept safe.</span></div>
+    <button class="ub-btn" onclick="openStoreToUpdate()">Update</button>
+    <button class="ub-close" onclick="document.getElementById('updateBanner').style.display='none'">&#10005;</button>
+  </div>
+
+  <!-- Hidden Native Camera & File Inputs for Quick Access -->
+  <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleNativeCameraCapture(event)" />
+  <input type="file" id="aiAttachFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.xlsx,.csv,.txt,.md,.html,application/pdf,image/*" style="display:none;" onchange="handleAiFileAttachment(event)" />
+
+  <div class="app-shell" id="appShellContainer">
+    <div class="app-workspace-column">
+
+      <!-- ==================== FIRST-LAUNCH FULL-SCREEN LOGIN / AUTHENTICATION PAGE ==================== -->
+      <div class="auth-gate-screen" id="authGateScreen">
+        <div class="auth-hero-brand">
+          <div class="auth-logo-circle">
+            <svg class="icon-lg" style="width:34px;height:34px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+          </div>
+          <h1>DocuCraft Pro</h1>
+          <p>Sign in to access your AI Document Co-Pilot, Camera Scanner & PDF Studio</p>
+        </div>
+
+        <div style="margin:auto 0;">
+          <button class="google-signin-btn" id="gateGoogleBtn" onclick="signInWithGoogleFromGate()">
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C41 35.6 44 30.3 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
+            Continue with Google
+          </button>
+
+          <div class="auth-divider">or</div>
+
+          <button class="primary-btn" style="width:100%;min-height:50px;font-size:15px;" onclick="continueAsGuestFromGate()">
+            Try the app free &rarr; 3 exports &bull; 24 hours
+          </button>
+
+          <div style="text-align:center;margin-top:16px;">
+            <button onclick="toggleGateEmailForm()" style="background:none;border:none;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;padding:6px;">
+              Prefer email? Sign in with your name &amp; email
+            </button>
+          </div>
+
+          <div id="gateEmailForm" style="display:none;margin-top:12px;">
+            <div class="form-group">
+              <label>Your name</label>
+              <input type="text" id="gateNameInput" class="form-control" placeholder="e.g. Mrinal" />
+            </div>
+            <div class="form-group">
+              <label>Email address</label>
+              <input type="email" id="gateEmailInput" class="form-control" placeholder="you@gmail.com" />
+            </div>
+            <button class="primary-btn" style="min-height:48px;font-size:14.5px;width:100%;" onclick="completeGateSignIn()">
+              Sign In &amp; Open App
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== CLEAN NATIVE MOBILE TOP HEADER ==================== -->
+      <header class="top-header">
+        <div class="brand-row" onclick="switchTab('home')">
+          <div class="brand-mark">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+          </div>
+          <div class="brand-text-block">
+            <span class="brand-title">DocuCraft&nbsp;<em class="brand-pro-word" id="proHeaderTag">Pro</em></span>
+            <span class="brand-sub" id="userGreetingSub">Welcome</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="credit-chip" onclick="openModal('storeModal')" title="Credits & Pro Store">
+            <span class="credit-dot"></span>
+            <span id="coinBalanceText">50</span>
+          </div>
+          <button class="icon-btn" onclick="openCameraScannerModal('pdf')" title="Camera Scan to PDF">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+          <button class="icon-btn" onclick="toggleThemeMode()" title="Light / Dark Theme"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+          <button class="avatar-btn" id="headerAvatarBtn" onclick="switchTab('profile')" title="Account & Settings">
+            <svg class="icon" style="width:18px;height:18px;" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- ==================== MAIN MOBILE SCREEN VIEWPORT ==================== -->
+      <main class="main-content" id="mainViewportScroll">
+
+        <!-- ==================== SCREEN 1: HOME SCREEN ==================== -->
+        <section class="tab-pane active" id="tab-home">
+          <div class="dashboard-layout">
+            <div class="home-greeting">
+              <span class="greet-name" id="homeGreetName">Welcome</span>
+              <span class="greet-date" id="homeGreetDate"></span>
+            </div>
+            <!-- AI Co-Pilot Hero Card -->
+            <div class="ai-hero-card">
+              <div class="ai-hero-top">
+                <span class="ai-badge">
+                  AI Document Assistant
+                </span>
+                <span style="font-size:12px;color:var(--accent-emerald);font-weight:700;cursor:pointer;" onclick="openToolWorkspace('create')">
+                  Open Chat &rarr;
+                </span>
+              </div>
+
+              <div class="ai-prompt-box">
+                <input
+                  type="text"
+                  id="homeAiPromptInput"
+                  placeholder="Ask AI to create any document..."
+                  onkeydown="if(event.key==='Enter') triggerQuickAiPdfFromHome()"
+                />
+                <button class="ai-generate-btn" onclick="triggerQuickAiPdfFromHome()">
+                  Ask AI
+                </button>
+              </div>
+
+              <div class="prompt-chips-scroll">
+                <span class="prompt-chip" onclick="askAiAboutLatestVaultFile()">Edit my latest PDF</span>
+              </div>
+            </div>
+
+            <div class="section-label">
+              <span>Tools</span>
+              <span onclick="switchTab('files')" style="color:var(--brand-primary);cursor:pointer;text-transform:none;font-size:12.5px;font-weight:800;">My Vault &rarr;</span>
+            </div>
+
+            <!-- 6 Large, Readable 2-Column Mobile Cards -->
+            <div class="tools-grid">
+              <div class="tool-card" id="card-tool-create" onclick="openToolWorkspace('create')">
+                <div class="tool-icon-box red">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>AI Assistant</h3>
+                  <p>Create & edit PDFs</p>
+                </div>
+              </div>
+
+              <div class="tool-card" id="card-tool-camera" onclick="openCameraScannerModal('pdf')">
+                <div class="tool-icon-box amber">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>Camera Scan</h3>
+                  <p>Snap photo to PDF</p>
+                </div>
+              </div>
+
+              <div class="tool-card" id="card-tool-edit" onclick="switchTab('editor')">
+                <div class="tool-icon-box dark">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>Edit & Sign</h3>
+                  <p>Crop, rotate & emoji</p>
+                </div>
+              </div>
+
+              <div class="tool-card" id="card-tool-compress" onclick="openToolWorkspace('compress')">
+                <div class="tool-icon-box emerald">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>Compress PDF</h3>
+                  <p>Shrink KB / MB size</p>
+                </div>
+              </div>
+
+              <div class="tool-card" id="card-tool-convert" onclick="openToolWorkspace('convert')">
+                <div class="tool-icon-box blue">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>File to PDF</h3>
+                  <p>Photos, Word, Excel</p>
+                </div>
+              </div>
+
+              <div class="tool-card" id="card-tool-pdf-to-any" onclick="openToolWorkspace('pdf-to-any')">
+                <div class="tool-icon-box violet">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>PDF to File</h3>
+                  <p>To Word, Excel, ZIP</p>
+                </div>
+              </div>
+              <div class="tool-card" id="card-tool-merge" onclick="openToolWorkspace('merge')">
+                <div class="tool-icon-box violet">
+                  <svg class="icon-lg" viewBox="0 0 24 24"><path d="M8 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3"/><rect x="8" y="3" width="8" height="6" rx="1"/><line x1="12" y1="15" x2="12" y2="9"/><polyline points="9 12 12 15 15 12"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>Merge PDFs</h3>
+                  <p>Combine multiple files</p>
+                </div>
+              </div>
+              <div class="tool-card" id="card-tool-whiteboard" onclick="openWhiteboard()">
+                <div class="tool-icon-box amber">
+                  <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h20v14H2z"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                </div>
+                <div class="tool-card-body">
+                  <h3>Whiteboard</h3>
+                  <p>Draw, sketch &amp; annotate</p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Recent Files in Vault -->
+            <div class="section-label">
+              <span>My Documents</span>
+              <a href="javascript:void(0)" onclick="switchTab('files')" style="color:var(--brand-primary);text-decoration:none;font-size:12.5px;font-weight:800;">See All →</a>
+            </div>
+            <div class="file-list" id="homeRecentFilesList"></div>
+          </div>
+        </section>
+
+        <!-- ==================== SCREEN 2: AI & PDF TOOLS WORKSPACE ==================== -->
+        <section class="tab-pane" id="tab-tools">
+
+          <div id="activeToolContainer" style="flex:1;min-height:0;"></div>
+        </section>
+
+        <!-- ==================== SCREEN 3: INTERACTIVE PDF CANVAS EDITOR ==================== -->
+        <section class="tab-pane" id="tab-editor">
+          <div class="editor-topbar">
+            <div style="display:flex;gap:6px;align-items:center;min-width:0;flex:1;">
+              <label class="secondary-btn" style="padding:7px 11px;font-size:13px;cursor:pointer;flex-shrink:0;">
+                📂 Open
+                <input type="file" id="editorPdfInput" accept="application/pdf" style="display:none;" onchange="handleEditorPdfUpload(event)" />
+              </label>
+              <span style="font-size:13px;font-weight:800;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="editorDocNameLabel">Document.pdf</span>
+            </div>
+
+            <div class="page-nav">
+              <button class="icon-btn" onclick="changeEditorPage(-1)">‹</button>
+              <span id="editorPageIndicator">1/1</span>
+              <button class="icon-btn" onclick="changeEditorPage(1)">›</button>
+              <button class="icon-btn" onclick="rotateCurrentEditorPage()" title="Rotate Page 90°">↻</button>
+            </div>
+
+            <button class="primary-btn" style="width:auto;min-height:38px;padding:7px 13px;font-size:13px;" onclick="exportEditedPdf()">
+              ⬇ Save
+            </button>
+          </div>
+
+          <div class="editor-studio-body">
+            <div class="editor-stage-column">
+              <!-- Main Interactive PDF Stage -->
+              <div class="canvas-stage-wrapper" id="canvasStageWrapper" onclick="deselectAllOverlays(event)">
+                <div class="pdf-page-container" id="pdfPageContainer">
+                  <canvas id="pdfRenderCanvas"></canvas>
+                  <div id="overlayLayer"></div>
+                </div>
+              </div>
+
+              <!-- Selected Layer Inspector Bar (Appears When Any Layer is Selected) -->
+              <div class="inspector-bar" id="overlayInspectorBar">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                  <span style="font-size:12px;font-weight:800;color:var(--accent-blue);">Selected Item Controls</span>
+                  <div style="display:flex;gap:6px;">
+                    <button class="secondary-btn" style="min-height:32px;padding:4px 10px;font-size:12px;" id="inspectorCropStudioBtn" onclick="openFourCornerCropStudioForSelected()">✂ 4-Corner Crop</button>
+                    <button class="secondary-btn" style="min-height:32px;padding:4px 10px;font-size:12px;" id="inspectorInlineCropBtn" onclick="toggleInlineCanvasCropMode()">Trim</button>
+                    <button class="icon-btn" style="width:32px;height:32px;color:var(--brand-primary);" onclick="deleteSelectedOverlay()">✕</button>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="text" id="inspectorTextInput" class="form-control" style="flex:1;padding:6px 10px;display:none;" placeholder="Edit text..." oninput="updateSelectedOverlayText(this.value)" />
+                  <input type="color" id="inspectorColorInput" value="#141413" style="width:34px;height:34px;border:none;background:none;cursor:pointer;display:none;" onchange="updateSelectedOverlayColor(this.value)" />
+                </div>
+
+                <!-- 360° Free Rotation & Flip Control Strip -->
+                <div class="rotation-control-strip">
+                  <button class="icon-btn" style="width:32px;height:30px;font-size:12px;" onclick="rotateSelectedOverlayBy(-45)">↺45</button>
+                  <input type="range" id="inspectorRotationSlider" class="rotation-slider" min="-180" max="180" step="1" value="0" oninput="setSelectedOverlayRotation(this.value)" />
+                  <span id="inspectorRotateValue" style="font-size:12.5px;font-weight:800;min-width:36px;text-align:right;color:var(--accent-blue);">0°</span>
+                  <button class="icon-btn" style="width:32px;height:30px;font-size:12px;" onclick="rotateSelectedOverlayBy(45)">↻45</button>
+                  <button class="icon-btn" style="width:32px;height:30px;font-size:12px;" onclick="flipSelectedOverlayHorizontal()">⇄</button>
+                </div>
+              </div>
+
+              <!-- 6-Button Mobile Editor Dock (Including Camera Capture) -->
+              <div class="editor-dock">
+                <button class="dock-btn" onclick="addTextOverlayToCanvas()">
+                  <svg class="icon" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                  <span>Text</span>
+                </button>
+                <button class="dock-btn" onclick="addWhiteoutOverlay()" title="Cover content with a white block">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" fill="#fff"/><path d="M4 4h16v16H4z"/></svg>
+                  Whiteout
+                </button>
+                <button class="dock-btn" onclick="openModal('replaceTextModal')" title="Find and replace text on this page" style="color:var(--accent-blue);">
+                  Replace text
+                </button>
+                <button class="dock-btn" onclick="openWhiteboard()" title="Open the whiteboard">
+                  Whiteboard
+                </button>
+
+                <label class="dock-btn">
+                  <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <span>Photo</span>
+                  <input type="file" accept="image/*" style="display:none;" onchange="handleAddPictureOverlay(event)" />
+                </label>
+
+                <button class="dock-btn" onclick="openCameraScannerModal('overlay')" style="color:var(--accent-amber);">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <span>Camera</span>
+                </button>
+
+                <button class="dock-btn" onclick="openModal('emojiModal')">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                  <span>Emoji</span>
+                </button>
+
+                <button class="dock-btn" onclick="openModal('signatureModal')">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                  <span>Sign</span>
+                </button>
+
+                <button class="dock-btn" onclick="openFourCornerCropStudioForSelected()" style="color:var(--accent-emerald);">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+                  <span>4-Crop</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== SCREEN 4: MY FILES VAULT ==================== -->
+        <section class="tab-pane" id="tab-files">
+          <div class="workspace-card">
+            <div class="workspace-header">
+              <div>
+                <h3>Document Vault</h3>
+                <p style="font-size:12.5px;color:var(--text-secondary);margin-top:2px;">Tap any file to edit with AI, sign on canvas, or share</p>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="secondary-btn" onclick="openCameraScannerModal('pdf')">Scan</button>
+                <label class="primary-btn" style="width:auto;cursor:pointer;">
+                  + Import
+                  <input type="file" accept="application/pdf,image/*" style="display:none;" onchange="importPdfToVault(event)" />
+                </label>
+              </div>
+            </div>
+            <div class="file-list" id="vaultFilesList"></div>
+          </div>
+        </section>
+
+        <!-- ==================== SCREEN 5: ACCOUNT & GEMINI AI ==================== -->
+        <section class="tab-pane" id="tab-profile">
+          <div class="studio-split-grid">
+            <!-- User Account Card -->
+            <div class="workspace-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div class="brand-mark" style="width:48px;height:48px;border-radius:50%;font-size:18px;font-weight:800;background:var(--ink-dark);color:var(--bg-surface);" id="profileAvatarLarge">G</div>
+                  <div>
+                    <h3 style="font-size:16px;font-weight:800;" id="profileNameDisplay">Guest User</h3>
+                    <p style="font-size:13px;color:var(--text-secondary);" id="profileEmailDisplay">Not signed in</p>
+                    <span id="profileTierBadge" style="display:inline-block;margin-top:4px;font-size:11.5px;padding:3px 9px;border-radius:6px;background:var(--bg-subtle);color:var(--text-main);font-weight:700;">Standard Plan</span>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <button class="secondary-btn" id="profileAuthActionBtn" onclick="openModal('authModal')">Switch Account</button>
+                  <button class="secondary-btn" style="color:var(--brand-primary);" onclick="signOutUser()">Log Out</button>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+                <button class="secondary-btn" style="font-size:12px;color:#b91c1c;" onclick="deleteAccountAndData()">Delete account &amp; data</button>
+                <a href="https://mrinalkon.github.io/docucraft/privacy.html" target="_blank" rel="noopener" class="secondary-btn" style="font-size:12px;text-decoration:none;display:inline-flex;align-items:center;">Privacy policy</a>
+              </div>
+            </div>
+
+            <!-- Google Gemini AI Connection Card -->
+            <div class="workspace-card">
+              <div class="workspace-header">
+                <h3>AI Engine</h3>
+                <span id="profileAiEngineStatusBadge" style="font-size:12px;color:var(--accent-emerald);font-weight:800;">● Active</span>
+              </div>
+
+              <div class="form-group">
+                <label>AI Provider</label>
+                <select id="aiProviderSelect" class="form-control" onchange="onAiProviderChange()">
+                  <option value="gemini">Google Gemini (free key available)</option>
+                  <option value="openai">OpenAI / ChatGPT (paid)</option>
+                  <option value="anthropic">Anthropic / Claude (paid)</option>
+                  <option value="openrouter">OpenRouter (100+ models incl. free)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>API Key</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="password" id="geminiApiKeyInput" class="form-control" placeholder="Paste your API key..." />
+                  <button class="primary-btn" style="width:auto;" onclick="saveGeminiApiKey()">Save</button>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Model <span style="font-weight:600;color:var(--text-muted);">(optional &mdash; advanced)</span></label>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="aiModelInput" class="form-control" placeholder="e.g. gemini-2.5-pro / gpt-4o / claude-sonnet-4-5" />
+                  <button class="secondary-btn" style="width:auto;" onclick="saveAiModel()">Save</button>
+                </div>
+                <div id="aiProviderHint" style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.45;"></div>
+              </div>
+            </div>
+
+            <!-- Credits & App Actions -->
+            <div class="workspace-card">
+              <div class="workspace-header">
+                <h3>Credits & App Diagnostics</h3>
+                <span id="profileCoinCount" style="font-size:14px;font-weight:800;color:var(--brand-primary);">50 Credits</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <button class="secondary-btn" onclick="triggerRewardedAd()">+10 Free Credits</button>
+                <button class="primary-btn" onclick="openModal('storeModal')">Upgrade to Pro</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ==================== NATIVE 5-TAB BOTTOM NAVIGATION BAR ==================== -->
+      <nav class="bottom-nav">
+        <button class="nav-item active" id="nav-home" onclick="switchTab('home')">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Home</span>
+        </button>
+        <button class="nav-item" id="nav-tools" onclick="openToolWorkspace(AppState.activeTool || 'create')">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z"/></svg>
+          <span>AI & Tools</span>
+        </button>
+        <button class="nav-item" id="nav-editor" onclick="switchTab('editor')">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Editor</span>
+        </button>
+        <button class="nav-item" id="nav-files" onclick="switchTab('files')">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>Vault</span>
+        </button>
+        <button class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          <span>Account</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 1: EMOJI & BUSINESS STAMP PICKER ==================== -->
+  <div class="modal-backdrop" id="emojiModal" onclick="closeModalOnBackdrop(event, 'emojiModal')">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>Insert Emoji or Official Stamp</h3>
+        <button class="icon-btn" onclick="closeModal('emojiModal')">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label>Official Rubber Stamps (Tap to place on PDF):</label>
+        <div class="stamp-grid">
+          <div class="stamp-pill" style="color:#059669;background:rgba(5,150,105,0.08);" onclick="addStampOverlay('APPROVED', '#059669')">✓ APPROVED</div>
+          <div class="stamp-pill" style="color:#d92d20;background:rgba(217,45,32,0.08);" onclick="addStampOverlay('CONFIDENTIAL', '#d92d20')">CONFIDENTIAL</div>
+          <div class="stamp-pill" style="color:#2563eb;background:rgba(37,99,235,0.08);" onclick="addStampOverlay('PAID IN FULL', '#2563eb')">PAID IN FULL</div>
+          <div class="stamp-pill" style="color:#d97706;background:rgba(217,119,6,0.08);" onclick="addStampOverlay('VERIFIED', '#d97706')">✓ VERIFIED</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Tap Any Emoji / Symbol to Add (With 4-Corner Crop & Rotate):</label>
+        <div class="emoji-grid" id="emojiGridContainer"></div>
+      </div>
+
+      <div class="form-group" style="display:flex;gap:8px;margin-bottom:0;">
+        <input type="text" id="customEmojiInput" class="form-control" placeholder="Type any emoji (e.g. 💍, ❤️, 🎉, ₹)..." />
+        <button class="primary-btn dark-btn" style="width:auto;white-space:nowrap;" onclick="addCustomEmojiFromInput()">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: E-SIGNATURE PAD ==================== -->
+  <div class="modal-backdrop" id="signatureModal" onclick="closeModalOnBackdrop(event, 'signatureModal')">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>Sign Document</h3>
+        <button class="icon-btn" onclick="closeModal('signatureModal')">✕</button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-size:13px;font-weight:700;color:var(--text-secondary);">Ink:</span>
+          <button onclick="setSignatureInk('#141413')" style="width:26px;height:26px;border-radius:50%;background:#141413;border:2px solid #fff;box-shadow:0 0 0 1px #ccc;cursor:pointer;"></button>
+          <button onclick="setSignatureInk('#1d4ed8')" style="width:26px;height:26px;border-radius:50%;background:#1d4ed8;border:2px solid #fff;box-shadow:0 0 0 1px #ccc;cursor:pointer;"></button>
+          <button onclick="setSignatureInk('#b91c1c')" style="width:26px;height:26px;border-radius:50%;background:#b91c1c;border:2px solid #fff;box-shadow:0 0 0 1px #ccc;cursor:pointer;"></button>
+        </div>
+        <button class="secondary-btn" style="min-height:34px;padding:5px 12px;" onclick="clearSignaturePad()">Clear</button>
+      </div>
+
+      <div class="sig-canvas-wrap">
+        <canvas id="signaturePadCanvas" width="420" height="165"></canvas>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+        <button class="secondary-btn" onclick="placeTypedSignature()">Type Name Sign</button>
+        <button class="primary-btn" onclick="applyDrawnSignatureToPdf()">Place Signature</button>
+      </div>
+
+      <div id="savedSignaturesSection" style="margin-top:14px;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: ACCOUNT SIGN-IN & GEMINI KEY ==================== -->
+  <div class="modal-backdrop" id="authModal" onclick="closeModalOnBackdrop(event, 'authModal')">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>Account & Google Gemini AI</h3>
+        <button class="icon-btn" onclick="closeModal('authModal')">✕</button>
+      </div>
+
+      <button class="secondary-btn" style="width:100%;margin-bottom:12px;border-color:var(--accent-blue);color:var(--accent-blue);" onclick="signInWithGoogleProvider()">
+        <span style="font-weight:900;font-size:16px;">G</span> Continue with Google
+      </button>
+
+      <div style="background:var(--bg-app);border:1px solid var(--border-strong);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:12.5px;font-weight:800;">Google Gemini API Key</span>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--accent-blue);">Get Free Key ↗</a>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input type="password" id="modalGeminiKeyInput" class="form-control" placeholder="Paste AIzaSy..." />
+          <button class="primary-btn" style="width:auto;" onclick="saveGeminiKeyFromAuthModal()">Link</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="authNameInput" class="form-control" placeholder="e.g. Mrinal" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="authEmailInput" class="form-control" placeholder="you@gmail.com" />
+      </div>
+
+      <button class="primary-btn" onclick="signInWithEmail()">Save & Sign In</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: PRO STORE & CREDITS ==================== -->
+  <div class="modal-backdrop" id="storeModal" onclick="closeModalOnBackdrop(event, 'storeModal')">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>DocuCraft Pro & Credits</h3>
+        <button class="icon-btn" onclick="closeModal('storeModal')">✕</button>
+      </div>
+
+      <div class="iap-card" style="border-color:rgba(5,150,105,0.4);background:var(--accent-emerald-soft);" onclick="triggerRewardedAd()">
+        <div>
+          <span style="font-size:11px;font-weight:800;color:var(--accent-emerald);">FREE REWARD</span>
+          <h4 style="font-size:15px;font-weight:800;margin-top:2px;">Watch a short video ad</h4>
+          <p style="font-size:12.5px;color:var(--text-secondary);">Earn +10 credits (1 export) per video</p>
+        </div>
+        <button class="iap-price-btn" style="background:var(--accent-emerald);color:#fff;">+10 Free</button>
+      </div>
+
+      <div class="iap-card featured" onclick="triggerInAppPurchase('pro_yearly')">
+        <div>
+          <span style="font-size:11px;font-weight:800;color:var(--brand-primary);">BEST VALUE &mdash; 2 MONTHS FREE</span>
+          <h4 style="font-size:15px;font-weight:800;margin-top:2px;">Pro Yearly</h4>
+          <p style="font-size:12.5px;color:var(--text-secondary);">Unlimited exports &bull; No ads &bull; Priority AI &bull; Cancel anytime</p>
+        </div>
+        <button class="iap-price-btn" style="background:var(--brand-primary);color:#fff;">&#8377;799/yr</button>
+      </div>
+
+      <div class="iap-card" onclick="triggerInAppPurchase('pro_monthly')">
+        <div>
+          <h4 style="font-size:14.5px;font-weight:700;">Pro Monthly</h4>
+          <p style="font-size:12px;color:var(--text-secondary);">Unlimited exports &bull; No ads &bull; Priority AI</p>
+        </div>
+        <button class="iap-price-btn">&#8377;99/mo</button>
+      </div>
+
+
+      <div class="iap-card" onclick="triggerInAppPurchase('coins_100')">
+        <div>
+          <h4 style="font-size:14.5px;font-weight:700;">100 Export Credits</h4>
+          <p style="font-size:12px;color:var(--text-secondary);">10 PDF Exports or Compressions &mdash; no subscription needed</p>
+        </div>
+        <button class="iap-price-btn">&#8377;49</button>
+      </div>
+    </div>
+  </div>
+
+
+
+<div class="modal-backdrop" id="confirmDeleteModal" onclick="closeModalOnBackdrop(event, 'confirmDeleteModal')">
+          <div class="modal-sheet">
+            <div class="modal-header"><h3>Delete account &amp; data?</h3>
+              <button class="icon-btn" onclick="closeModal('confirmDeleteModal')">&#10005;</button></div>
+            <p style="font-size:13px;color:var(--text-secondary);margin:10px 0 16px;line-height:1.5;">This permanently removes your sign-in, saved PDFs, signatures, credits, and settings from this device. It cannot be undone.</p>
+            <div style="display:flex;gap:8px;">
+              <button class="secondary-btn" style="flex:1;" onclick="closeModal('confirmDeleteModal')">Cancel</button>
+              <button style="flex:1;border:none;border-radius:10px;min-height:44px;background:#b91c1c;color:#fff;font-weight:700;font-size:13px;cursor:pointer;" onclick="confirmDeleteNow()">Delete everything</button>
+            </div>
+          </div>
+        </div>
+
+  <!-- ==================== MODAL: REWARDED AD CHOICE (opt-in, never interruptive) ==================== -->
+  <div class="modal-backdrop" id="rewardChoiceModal" onclick="closeModalOnBackdrop(event, 'rewardChoiceModal')">
+    <div class="modal-sheet" style="text-align:center;">
+      <div class="modal-header"><h3 id="rewardChoiceTitle">Out of export credits</h3>
+        <button class="icon-btn" onclick="closeModal('rewardChoiceModal')">✕</button></div>
+      <p id="rewardChoiceText" style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5;">
+        Watch a short video to get +25 export credits instantly &mdash; or go unlimited with Pro.
+      </p>
+      <button class="primary-btn" style="width:100%;min-height:48px;" onclick="acceptRewardedOffer()">
+        &#9654; Watch short video &nbsp;&middot;&nbsp; +10 credits (1 export)
+      </button>
+      <button class="secondary-btn" style="width:100%;margin-top:8px;" onclick="closeModal('rewardChoiceModal'); openModal('storeModal')">
+        See Pro plans (no ads, unlimited)
+      </button>
+      <button class="secondary-btn" style="width:100%;margin-top:8px;color:var(--text-muted);" onclick="closeModal('rewardChoiceModal')">
+        Not now
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ==================== MODAL: WHITEBOARD (full screen) ==================== -->
+  <div class="modal-backdrop" id="whiteboardModal" style="align-items:stretch;" onclick="closeModalOnBackdrop(event, 'whiteboardModal')">
+    <div class="whiteboard-shell">
+      <div class="wb-topbar">
+        <span class="wb-title">Whiteboard</span>
+        <div class="wb-actions">
+          <button class="secondary-btn wb-mini" onclick="toggleWbInsertMenu(event)" title="Insert image, PDF, or Vault file">&#128249; Insert</button>
+          <button class="secondary-btn wb-mini" onclick="wbUndo()" title="Undo">&#8630;</button>
+          <button class="secondary-btn wb-mini" onclick="wbRedo()" title="Redo">&#8631;</button>
+          <button class="secondary-btn wb-mini" onclick="wbClear()" title="Clear all">Clear</button>
+          <button class="primary-btn wb-mini" onclick="wbSaveToVault()">Save to Vault</button>
+          <button class="icon-btn" onclick="closeModal('whiteboardModal')">&#10005;</button>
+        </div>
+      </div>
+      <div class="wb-body">
+        <div class="wb-insert-menu" id="wbInsertMenu">
+          <button onclick="insertWbFile()">&#128193; From device</button>
+          <button onclick="openWbVaultPicker()">&#128451; From Vault</button>
+        </div>
+        <div class="wb-vault-picker" id="wbVaultPicker">
+          <div class="wb-cf-title">Choose a Vault file</div>
+          <div class="wb-vault-list" id="wbVaultList"></div>
+        </div>
+        <input type="file" id="wbFileInput" accept="image/*,application/pdf" style="display:none" onchange="handleWbFile(this)" />
+        <button class="wb-edge-handle" id="wbToggle" onclick="toggleWbToolbar()" title="Show/hide tools">&#9654;</button>
+        <div class="wb-text-pop" id="wbTextPop">
+          <div class="wb-tp-head">Text style</div>
+          <input type="text" id="wbTextInput" placeholder="Type your text&#8230;" maxlength="120" autocomplete="off" />
+          <div class="wb-tp-label">Font</div>
+          <div class="wb-font-strip" id="wbFontStrip"></div>
+          <div class="wb-tp-label">Size <span id="wbTextSizeVal">28</span></div>
+          <input type="range" id="wbTextSizeRange" min="10" max="96" step="2" value="28" oninput="wbRangeSize(this.value)" />
+          <div class="wb-tp-label">Colour</div>
+          <div class="wb-text-colors" id="wbTextColors"></div>
+          <div class="wb-text-row">
+            <button class="wb-text-cancel" onclick="cancelWbText()">Cancel</button>
+            <button class="wb-text-ok" onclick="confirmWbText()">Add text</button>
+          </div>
+        </div>
+        <div class="wb-toolcol" id="wbToolCol">
+          <div class="wb-sect">Tools</div>
+          <button class="wb-tool" data-wbtool="select" title="Select / move / resize">&#9762;</button>
+          <button class="wb-tool active" data-wbtool="pencil" title="Pencil">&#9998;</button>
+          <button class="wb-tool" data-wbtool="brush" title="Brush (soft thick)">&#9999;</button>
+          <button class="wb-tool" data-wbtool="marker" title="Highlighter marker">&#9830;</button>
+          <button class="wb-tool" data-wbtool="spray" title="Spray paint">&#9679;</button>
+          <button class="wb-tool" data-wbtool="eraser" title="Eraser">&#9003;</button>
+          <button class="wb-tool" data-wbtool="bucket" title="Fill bucket">&#128167;</button>
+          <button class="wb-tool" data-wbtool="picker" title="Pick color from board">&#128065;</button>
+          <button class="wb-tool" data-wbtool="text" title="Text">T</button>
+
+          <div class="wb-sect">Shapes</div>
+          <button class="wb-tool" id="wbShapesBtn" onclick="toggleWbShapesFlyout(event)" title="All shapes">&#9633; &#9662;</button>
+
+          <div class="wb-sect">Size</div>
+          <div class="wb-sizes">
+            <button class="wb-size" data-wbsize="2" title="Thin">&#8226;</button>
+            <button class="wb-size active" data-wbsize="5" title="Medium">&#8226;</button>
+            <button class="wb-size" data-wbsize="10" title="Thick">&#8226;</button>
+            <button class="wb-size" data-wbsize="20" title="Extra thick">&#8226;</button>
+          </div>
+          <button class="wb-tool" id="wbFillBtn" onclick="toggleWbFill(event)" title="Shapes filled on/off" style="font-size:10px;">Fill</button>
+
+          <div class="wb-sect">Colour</div>
+          <button class="wb-tool" id="wbColorsBtn" onclick="toggleWbColorsFlyout(event)" title="Colours + custom">
+            <span class="wb-cur-color" id="wbCurColor" style="background:#141413"></span>
+          </button>
+
+          <div class="wb-colors-flyout" id="wbColorsFlyout">
+            <div class="wb-cf-title">Colours</div>
+            <div class="wb-colors" id="wbColors"></div>
+            <div class="wb-cf-title">Custom</div>
+            <div class="wb-custom-row">
+              <label class="wb-custom-swatch" id="wbCustomSwatch" style="background:#141413">
+                <input type="color" id="wbCustomColor" value="#141413" oninput="pickWbCustomColor(this.value)" />
+              </label>
+              <button class="wb-cf-ok" onclick="closeWbColorsFlyout()">Done</button>
+            </div>
+          </div>
+          <div class="wb-flyout" id="wbShapesFlyout">
+            <button class="wb-shape" data-wbtool="line">&#9585;</button>
+            <button class="wb-shape" data-wbtool="dashed">&#8944;</button>
+            <button class="wb-shape" data-wbtool="arrow">&#10142;</button>
+            <button class="wb-shape" data-wbtool="arrowleft">&#11013;</button>
+            <button class="wb-shape" data-wbtool="arrowup">&#11014;</button>
+            <button class="wb-shape" data-wbtool="arrowdown">&#11015;</button>
+            <button class="wb-shape" data-wbtool="rect">&#9633;</button>
+            <button class="wb-shape" data-wbtool="roundrect">&#9646;</button>
+            <button class="wb-shape" data-wbtool="circle">&#9711;</button>
+            <button class="wb-shape" data-wbtool="triangle">&#9651;</button>
+            <button class="wb-shape" data-wbtool="diamond">&#9670;</button>
+            <button class="wb-shape" data-wbtool="pentagon">&#11040;</button>
+            <button class="wb-shape" data-wbtool="hexagon">&#11041;</button>
+            <button class="wb-shape" data-wbtool="star">&#9733;</button>
+            <button class="wb-shape" data-wbtool="star4">&#10022;</button>
+            <button class="wb-shape" data-wbtool="lightning">&#9889;</button>
+            <button class="wb-shape" data-wbtool="heart">&#9829;</button>
+            <button class="wb-shape" data-wbtool="bubble">&#128172;</button>
+          </div>
+        </div>
+        <canvas id="whiteboardCanvas" class="wb-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: REPLACE TEXT IN PDF ==================== -->
+  <div class="modal-backdrop" id="replaceTextModal" onclick="closeModalOnBackdrop(event, 'replaceTextModal')">
+    <div class="modal-sheet">
+      <div class="modal-header"><h3>Replace text on this page</h3>
+        <button class="icon-btn" onclick="closeModal('replaceTextModal')">&#10005;</button></div>
+      <div class="form-group">
+        <label>Find (exact text on the page)</label>
+        <input type="text" id="rtFind" class="form-control" placeholder="e.g. Rs. 24,000" />
+      </div>
+      <div class="form-group">
+        <label>Replace with</label>
+        <input type="text" id="rtReplace" class="form-control" placeholder="e.g. Rs. 28,000" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Font</label>
+          <select id="rtFont" class="form-control">
+            <option value="match">Match original (auto)</option>
+            <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+            <option value="'Times New Roman', serif">Times</option>
+            <option value="Courier, monospace">Courier</option>
+            <option value="Georgia, serif">Georgia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <select id="rtSize" class="form-control">
+            <option value="match">Match original (auto)</option>
+            <option value="10">10</option><option value="12">12</option>
+            <option value="14">14</option><option value="16">16</option><option value="18">18</option><option value="24">24</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Style</label>
+          <select id="rtStyle" class="form-control">
+            <option value="match">Match original</option>
+            <option value="bold">Bold</option>
+            <option value="italic">Italic</option>
+            <option value="normal">Regular</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <input type="color" id="rtColor" class="form-control" style="height:44px;padding:4px;" value="#141413" />
+        </div>
+      </div>
+      <button class="primary-btn" style="width:100%;" onclick="applyTextReplacement()">Find &amp; Replace on Page</button>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.45;">
+        Matching words are covered precisely and retyped in place. Drag the result to fine-tune position.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: AI ENGINE SETTINGS (from chat) ==================== -->
+  <div class="modal-backdrop" id="aiSettingsModal" onclick="closeModalOnBackdrop(event, 'aiSettingsModal')">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>AI Engine</h3>
+        <button class="icon-btn" onclick="closeModal('aiSettingsModal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label>AI Provider</label>
+        <select id="aiSettingsProviderSelect" class="form-control" onchange="onAiSettingsProviderChange()">
+          <option value="gemini">Google Gemini (free key available)</option>
+          <option value="openai">OpenAI / ChatGPT (paid)</option>
+          <option value="anthropic">Anthropic / Claude (paid)</option>
+          <option value="openrouter">OpenRouter (100+ models incl. free)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="aiSettingsKeyInput" class="form-control" placeholder="Paste your API key..." />
+      </div>
+      <div class="form-group">
+        <label>Model <span style="font-weight:600;color:var(--text-muted);">(optional)</span></label>
+        <input type="text" id="aiSettingsModelInput" class="form-control" placeholder="e.g. gemini-2.5-pro / gpt-4o" />
+        <div id="aiSettingsHint" style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.45;"></div>
+      </div>
+      <button class="primary-btn" style="width:100%;" onclick="saveAiSettingsFromModal()">Save &amp; Use This Engine</button>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 6: 4-CORNER CROP & 360° ROTATE STUDIO ==================== -->
+  <div class="modal-backdrop" id="fourCornerCropModal" onclick="closeModalOnBackdrop(event, 'fourCornerCropModal')">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>4-Corner Crop & Rotate</h3>
+        <button class="icon-btn" onclick="closeModal('fourCornerCropModal')">✕</button>
+      </div>
+
+      <div class="segmented-control two-col" style="margin-bottom:8px;">
+        <button class="seg-btn active" id="cropModeFreeBtn" onclick="setFourCornerCropMode('free')">4-Point Free Quad</button>
+        <button class="seg-btn" id="cropModeRectBtn" onclick="setFourCornerCropMode('rect')">4-Corner Rectangle</button>
+      </div>
+
+      <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;">
+        Drag any of the <strong>4 corners (TL, TR, BR, BL)</strong> independently, or rotate below:
+      </p>
+
+      <div class="crop-studio-wrap">
+        <canvas id="fourCornerCropCanvas" width="350" height="250"></canvas>
+      </div>
+
+      <div class="rotation-control-strip" style="margin-top:10px;">
+        <button class="icon-btn" style="width:34px;height:32px;font-size:12px;" onclick="rotateCropSource90(-1)">↺90</button>
+        <input type="range" id="cropStudioAngleSlider" class="rotation-slider" min="-180" max="180" step="1" value="0" oninput="setCropStudioFineAngle(this.value)" />
+        <span id="cropStudioAngleLabel" style="font-size:12.5px;font-weight:800;min-width:36px;text-align:right;color:var(--accent-emerald);">0°</span>
+        <button class="icon-btn" style="width:34px;height:32px;font-size:12px;" onclick="rotateCropSource90(1)">↻90</button>
+        <button class="icon-btn" style="width:32px;height:32px;font-size:12px;" onclick="flipCropSource('h')">⇄</button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;gap:10px;margin-top:12px;">
+        <button class="secondary-btn" onclick="resetFourCornerCropHandles()">Reset</button>
+        <button class="primary-btn" style="flex:1;" onclick="applyFourCornerCrop()">Apply Crop & Rotate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 8: IPHONE INSTALLER ==================== -->
+  <div class="modal-backdrop" id="iosQrModal" onclick="closeModalOnBackdrop(event, 'iosQrModal')">
+    <div class="modal-sheet" style="text-align:center;">
+      <div class="modal-header">
+        <h3>📲 Install on iPhone</h3>
+        <button class="icon-btn" onclick="closeModal('iosQrModal')">✕</button>
+      </div>
+      <a
+        href="DocuCraftPro.mobileconfig"
+        download="DocuCraftPro.mobileconfig"
+        class="primary-btn"
+        style="display:flex;text-decoration:none;margin-bottom:12px;"
+      >
+        📲 Install Native iOS App Profile
+      </a>
+      <div style="background:var(--bg-app);border:1px solid var(--border-strong);border-radius:12px;padding:10px;text-align:left;">
+        <div style="font-size:11px;font-weight:800;color:var(--accent-emerald);">LIVE CLOUD LINK</div>
+        <code style="font-size:12px;font-weight:800;word-break:break-all;">https://holdem-carrier-agenda-wanted.trycloudflare.com</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 9: CAMERA DOCUMENT SCANNER & CAPTURE STUDIO ==================== -->
+  <script>
+    // Offline mode: after one successful load the app is stored on the device
+    // and opens with no server, no laptop, and no internet (except the AI).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+  <script src="app.js?v=99"></script>
+</body>
+</html>
