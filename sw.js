@@ -1,7 +1,7 @@
 // DocuCraft Pro — Offline Service Worker
 // After ONE successful load, the entire app (login, PDF tools, editor,
 // camera, vault) is stored on the phone and opens with no server at all.
-const CACHE_NAME = 'docucraft-v179';
+const CACHE_NAME = 'docucraft-v177';
 const APP_SHELL = [
   'index.html?v=177',
   'app.js?v=177',
