@@ -1,0 +1,229 @@
+/* ============================================================================
+   UNIFIED EDITOR — Styles
+   ============================================================================ */
+
+.ue-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  background: #e8eaed;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ue-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 8px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ue-toolbar.ue-bottom {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: none;
+  flex-direction: column;
+  padding: 4px;
+}
+
+.ue-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.ue-top-row {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.ue-btn {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ue-btn:active { background: #f1f5f9; }
+.ue-btn.ue-primary {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+.ue-btn.ue-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.ue-zoom-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  margin: 0 4px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.ue-canvas-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ue-canvas-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  touch-action: none;
+}
+
+/* Bottom toolbar tool buttons */
+.ue-tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ue-tool-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.ue-tool-btn:active { background: #e2e8f0; }
+.ue-tool-btn.active:active { background: #1d4ed8; }
+
+/* Contextual toolbar row */
+.ue-context-row {
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Shapes flyout */
+.ue-shapes-flyout {
+  position: absolute;
+  bottom: 100px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 40;
+}
+
+.ue-shapes-flyout button {
+  padding: 8px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ue-shapes-flyout button.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+/* Colors panel */
+.ue-colors-panel {
+  position: absolute;
+  bottom: 100px;
+  left: 10px;
+  right: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 40;
+}
+
+.ue-colors-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.ue-color-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 2px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.ue-color-swatch:active {
+  border-color: #2563eb;
+  transform: scale(0.92);
+}
+
+.ue-custom-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ue-custom-color-row input[type="color"] {
+  width: 40px;
+  height: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Format badge */
+.ue-format-badge {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Hide old editor and whiteboard tabs when unified editor is active */
+.tab-pane#tab-unified-editor {
+  display: none;
+}
+.tab-pane#tab-unified-editor.active {
+  display: flex !important;
+  flex-direction: column;
+}
