@@ -1,7 +1,7 @@
 // DocuCraft Pro — Offline Service Worker
 // After ONE successful load, the entire app (login, PDF tools, editor,
 // camera, vault) is stored on the phone and opens with no server at all.
-const CACHE_NAME = 'docucraft-v177';
+const CACHE_NAME = 'docucraft-v179';
 const APP_SHELL = [
   'index.html?v=177',
   'app.js?v=177',
@@ -39,6 +39,31 @@ self.addEventListener('activate', event => {
   );
 });
 
+// NETWORK_FIRST: always try the server first, only use cache when offline.
+// This prevents users from seeing stale cached versions after updates.
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // Update the cache with the fresh response
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+        return response;
+      })
+      .catch(() => {
+        // Network failed — serve from cache
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          return caches.match('/docucraft/index.html').then(offline => offline || Response.error());
+        });
+      })
+  );
+});
+
+// Keep the original fetch handler for backward compatibility but it won't run
+// because the network-first handler above takes priority
+const _origFetchHandler = null;
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
